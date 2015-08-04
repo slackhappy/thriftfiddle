@@ -1,0 +1,62 @@
+<html>
+  <head>
+    <link href="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/css/bootstrap-combined.min.css" rel="stylesheet">
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js" ></script>
+    <script>
+      var exports = {};
+    </script>
+    <script src="b64.js"></script>
+    <script src="thriftfiddle.js"></script>
+    <style>
+    .code { font-family: monospace; }
+    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  </head>
+  <body>
+    <div class="container">
+      <h1>TBinaryProtocol Spec (derived)</h1>
+      <a href="index.html">ThriftFiddle</a>
+      <table class="table">
+        <tr><th>symbol</th><th></th><th>expression</th><th>comment</th></tr>
+        <tr><td class="code">(request)</td><td>::=</td><td class="code">message struct</td><td></td></tr>
+        <tr><td class="code">(reply)</td><td>::=</td><td class="code">message (struct)?</td><td></td></tr>
+        <tr><td class="code">message</td><td>::=</td><td class="code">string mtype seqid</td><td></td></tr>
+        <tr><td class="code">mtype</td><td>::=</td><td class="code">"\x01"</td><td>CALL</td></tr>
+        <tr><td class="code">     </td><td> | </td><td class="code">"\x02"</td><td>REPLY</td></tr>
+        <tr><td class="code">     </td><td> | </td><td class="code">"\x03"</td><td>EXCEPTION</td></tr>
+        <tr><td class="code">     </td><td> | </td><td class="code">"\x04"</td><td>ONEWAY</td></tr>
+        <tr><td class="code">seqid</td><td>::=</td><td class="code">value(I32)</td><td></td></tr>
+        <tr><td class="code">struct</td><td>::=</td><td class="code">(field)* "\x00" </td><td>A struct is just an undecorated list of fields, followed by a null byte</td></tr>
+        <tr><td class="code">field</td><td>::=</td><td class="code">type id value(type) </td><td>A type, id, and value</td></tr>
+        <tr><td class="code">type</td><td>::=</td><td class="code">"\x00"</td><td>STOP (designates fields in struct have ended)</td></tr>
+        <tr><td class="code">    </td><td> | </td><td class="code">"\x01"</td><td>VOID</td></tr>
+        <tr><td class="code">    </td><td> | </td><td class="code">"\x02"</td><td>BOOL</td></tr>
+        <tr><td class="code">    </td><td> | </td><td class="code">"\x03"</td><td>BYTE</td></tr>
+        <tr><td class="code">    </td><td> | </td><td class="code">"\x04"</td><td>DOUBLE</td></tr>
+        <tr><td class="code">    </td><td> | </td><td class="code">"\x06"</td><td>I16</td></tr>
+        <tr><td class="code">    </td><td> | </td><td class="code">"\x08"</td><td>I32</td></tr>
+        <tr><td class="code">    </td><td> | </td><td class="code">"\x0A"</td><td>I64</td></tr>
+        <tr><td class="code">    </td><td> | </td><td class="code">"\x0B"</td><td>STRING</td></tr>
+        <tr><td class="code">    </td><td> | </td><td class="code">"\x0C"</td><td>STRUCT</td></tr>
+        <tr><td class="code">    </td><td> | </td><td class="code">"\x0D"</td><td>MAP</td></tr>
+        <tr><td class="code">    </td><td> | </td><td class="code">"\x0E"</td><td>SET</td></tr>
+        <tr><td class="code">    </td><td> | </td><td class="code">"\x0F"</td><td>LIST</td></tr>
+        <tr><td class="code">    </td><td> | </td><td class="code">"\x10"</td><td>ENUM</td></tr>
+        <tr><td class="code">id</td><td>::=</td><td class="code">value(I16)</td><td></td></tr>
+        <tr><td class="code">size</td><td>::=</td><td class="code">value(I32)</td><td></td></tr>
+        <tr><td class="code">value(BOOL)</td><td>::=</td><td class="code">"\x00" | "\x01"</td><td></td></tr>
+        <tr><td class="code">value(BYTE)</td><td>::=</td><td class="code">"\x00" - "\xFF"</td><td></td></tr>
+        <tr><td class="code">value(DOUBLE)</td><td>::=</td><td class="code"></td><td>IEEE 754 double-precision</td></tr>
+        <tr><td class="code">value(I16)</td><td>::=</td><td class="code">value(BYTE) value(BYTE)</td><td>(Big endian)</td></tr>
+        <tr><td class="code">value(I32)</td><td>::=</td><td class="code">value(I16) value(I16)</td><td>(Big endian)</td></tr>
+        <tr><td class="code">value(I64)</td><td>::=</td><td class="code">value(I32) value(I32)</td><td>(Big endian)</td></tr>
+        <tr><td class="code">value(STRING)</td><td>::=</td><td class="code">size (value(BYTE)){size}</td><td></td></tr>
+        <tr><td class="code">value(STRUCT)</td><td>::=</td><td class="code">struct</td><td></td></tr>
+        <tr><td class="code">value(MAP)</td><td>::=</td><td class="code">type1 type2 size (value(type1) value(type2)){size}</td><td>first type is key, second type is value</td></tr>
+        <tr><td class="code">value(SET)</td><td>::=</td><td class="code">type size (value(type)){size}</td><td></td></tr>
+        <tr><td class="code">value(LIST)</td><td>::=</td><td class="code">type size (value(type)){size}</td><td></td></tr>
+        <tr><td class="code">value(ENUM)</td><td>::=</td><td class="code">value(I32)</td><td></td></tr>
+      </table>
+    </div>
+  </body>
+</html>
