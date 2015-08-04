@@ -1,0 +1,111 @@
+<html>
+  <head>
+    <link href="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/css/bootstrap-combined.min.css" rel="stylesheet">
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js" ></script>
+    <script>
+      var exports = {};
+    </script>
+    <script src="b64.js"></script>
+    <script src="thriftfiddle.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  </head>
+  <body>
+    <div class="container">
+      <h1>ThriftFiddle</h1>
+      <p>
+      <textarea id="message" class="span12"></textarea>
+      <div class="radio">
+        <label><input type="radio" name="encoding" value="Base64" checked="checked">Base64</label>
+        <label><input type="radio" name="encoding" value="Hex">Hex</label>
+      </div>
+      </p>
+      <p>
+      <div id="result"></div>
+      </p>
+
+    </div>
+
+    <script>
+      var unsuccessful = [false, ''];
+      function decode(str) {
+        try {
+          var bin;
+          var encoding = $("[name='encoding']:checked").val();
+          if (encoding == 'Base64') {
+            bin = exports.toByteArray(str);
+          } else {
+            strHex = str.replace(/[^a-fA-F0-9]/g, '');
+            if (strHex.length % 2 != 0) {
+              return unsuccessful;
+            } else {
+              bin = new Uint8Array(strHex.length / 2);
+              for (var i = 0; i < strHex.length / 2; i ++) {
+                bin[i] = parseInt(strHex.substring(i * 2, i * 2 + 2), 16);
+              }
+            }
+          }
+          var tBuffer = new TBuffer(bin);
+          var tProt = new TBinaryProtocol(tBuffer);
+          var tStruct = new TStruct();
+          return [true, tStruct.read(tProt)];
+        } catch(e) {
+          return unsuccessful;
+        }
+      }
+
+      function encode(str) {
+        if (!str) {
+          return [true, []];
+        }
+
+        return [true, []];
+      }
+
+      function endec(fn, str) {
+        var res;
+        if (fn == 'encode') {
+          res = encode(str.replace(/\s/g, ''));
+        } else {
+          res = decode(str);
+        }
+        if (res == unsuccessful) {
+          return res;
+        }
+
+        var s = '';
+        if (fn == 'encode') {
+          for (rIdx in res[1]) {
+            s += res[1][rIdx] + '<br>\n';
+          }
+        } else {
+          s = '<pre>'
+          s += JSON.stringify(res[1], null, 2);
+          s += '</pre>';
+        }
+        return s;
+      }
+
+      $(document).ready(function() {
+        function process() {
+          var fn = 'decode';
+          var input = $('textarea');
+          var result = endec(fn, input.val());
+
+          if (result != unsuccessful) {
+            input.css('background-color', 'white');
+            $('#result').html(result);
+          } else {
+            input.css('background-color', 'red');
+          }
+        }
+
+        $('textarea').keyup(function(e) {
+          process();
+        })
+        $('input:radio').change(function(e) {
+          process();
+        })
+      })
+    </script>
+  <body>
+</html>
