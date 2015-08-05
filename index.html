@@ -6,6 +6,7 @@
       var exports = {};
     </script>
     <script src="b64.js"></script>
+    <script src="big.min.js"></script>
     <script src="thriftfiddle.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
   </head>
@@ -35,15 +36,7 @@
           if (encoding == 'Base64') {
             bin = exports.toByteArray(str);
           } else {
-            strHex = str.replace(/[^a-fA-F0-9]/g, '');
-            if (strHex.length % 2 != 0) {
-              return unsuccessful;
-            } else {
-              bin = new Uint8Array(strHex.length / 2);
-              for (var i = 0; i < strHex.length / 2; i ++) {
-                bin[i] = parseInt(strHex.substring(i * 2, i * 2 + 2), 16);
-              }
-            }
+            bin = hex2bin(str);
           }
           var tBuffer = new TBuffer(bin);
           var tProt = new TBinaryProtocol(tBuffer);

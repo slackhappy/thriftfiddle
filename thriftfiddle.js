@@ -25,6 +25,8 @@ var TName = function(tType) {
 
 var I16_MAX = 32767
 var I32_MAX = 2147483647
+var I64_MAX = Big('9223372036854775807')
+var I64_UMAX = Big('18446744073709551616')
 
 var TBuffer = function TBuffer(uint8array) {
   this.buf = uint8array;
@@ -51,10 +53,10 @@ var TBuffer = function TBuffer(uint8array) {
   }
 
   this.readI32 = function() {
-    var res = this.readByte();
-    res = (res << 8) + this.readByte();
-    res = (res << 8) + this.readByte();
-    res = (res << 8) + this.readByte();
+    var res = 0;
+    for (var i = 0; i < 4; i++) {
+      res = (res << 8) + this.readByte();
+    }
     console.log(res.toString(2))
     if (res > I32_MAX) {
       return I32_MAX - res
@@ -63,7 +65,34 @@ var TBuffer = function TBuffer(uint8array) {
     }
   }
 
+  // NB: always returns a Big
+  this.readI64 = function() {
+    var res = new Big(0);
+    for (var i = 0; i < 8; i++) {
+      res = res.times(256).plus(this.readByte());
+    }
+    console.log(res.toString())
+    if (res.gt(I64_MAX)) {
+      return res.minus(I64_UMAX);
+    } else {
+      return res;
+    }
+  }
+
+  this.readDouble = function() {
+    var reversed = new Array(8);
+    // No Uint8Array.reverse in chrome
+    for (var i = reversed.length - 1; i >= 0; i--) {
+      reversed[i] = this.readByte();
+    }
+    var dArr = new Float64Array(new Uint8Array(reversed).buffer);
+    return dArr[0];
+  }
+
   this.read = function(bytes) {
+    if (this.idx + bytes > this.buf.length || bytes < 0) {
+      throw 'Unexpected end of buffer';
+    }
     var res = this.buf.subarray(this.idx, this.idx + bytes);
     this.idx += bytes;
     return res;
@@ -184,32 +213,56 @@ var TBinaryProtocol = function TBinaryProtocol(tBuffer) {
   this.readValue = function(tType) {
     console.log('readValue ' + TName(tType));
     switch(tType) {
+      case TType.STOP:
+        throw 'Unexpected read of a STOP'
+        break;
+      case TType.STOP:
+        throw 'Unexpected read of a VOID'
+        break;
+      case TType.BOOL:
+        return this.tBuffer.readByte() == 1;
+        break;
+      case TType.BYTE:
+        return this.tBuffer.readByte();
+        break;
+      case TType.DOUBLE:
+        return this.tBuffer.readDouble();
+        break;
+      case TType.I16:
+        return this.tBuffer.readI16();
+        break;
+      case TType.I32:
+      case TType.ENUM:
+        return this.tBuffer.readI32();
+        break;
+      case TType.I64:
+        return this.tBuffer.readI64().toString() + 'L';
+        break;
       case TType.MAP:
         return this.readMap();
         break;
       case TType.STRING:
         return this.readString();
         break;
+      case TType.SET:
       case TType.LIST:
         return this.readList();
         break;
       case TType.STRUCT:
         return this.readStruct();
         break;
-      case TType.I16:
-        return this.tBuffer.readI16();
-        break;
-      case TType.I32:
-        return this.tBuffer.readI32();
-        break;
-      case TType.BYTE:
-        return this.tBuffer.readByte();
-        break;
-      case TType.BOOL:
-        return this.tBuffer.readByte() == 1;
-        break;
       default:
         debugger;
     }
   }
 }
+
+var hex2bin = function(str) {
+  var strHex = str.replace(/[^a-fA-F0-9]/g, '');
+  var bin = new Uint8Array(strHex.length / 2);
+  for (var i = 0; i < strHex.length / 2; i ++) {
+    bin[i] = parseInt(strHex.substring(i * 2, i * 2 + 2), 16);
+  }
+  return bin;
+}
+
