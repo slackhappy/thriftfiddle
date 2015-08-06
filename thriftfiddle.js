@@ -23,10 +23,12 @@ var TName = function(tType) {
   }
 }
 
-var I16_MAX = 32767
-var I32_MAX = 2147483647
-var I64_MAX = Big('9223372036854775807')
-var I64_UMAX = Big('18446744073709551616')
+var I16_MAX = 32767;
+var I32_MAX = 2147483647;
+var I64_MAX = Big('9223372036854775807');
+var I64_UMAX = Big('18446744073709551616');
+var VERSION_MASK = 0xffff0000;
+var VERSION_1 = 0x80010000;
 
 var TBuffer = function TBuffer(uint8array) {
   this.buf = uint8array;
@@ -152,6 +154,18 @@ var TField = function TField(fType, id) {
   }
 }
 
+
+var TMessage = function TMessage(name, mType, seqId) {
+  this.name = name;
+  this.mType = mType;
+  this.seqId = seqId;
+
+  this.read = function(proto) {
+    var tStruct = new TStruct();
+    return [ name, mType, seqId, tStruct.read(proto) ];
+  }
+}
+
 // from http://stackoverflow.com/questions/17191945/conversion-between-utf-8-arraybuffer-and-string
 function uintToString(uintArray) {
   var encodedString = String.fromCharCode.apply(null, uintArray);
@@ -170,6 +184,20 @@ var TBinaryProtocol = function TBinaryProtocol(tBuffer) {
     var tField = new TField(fType, id);
     console.log('fld ' + fType + ' ' + id);
     return tField;
+  }
+
+  this.readMessage = function() {
+    var size = this.tBuffer.readI32();
+    if (size < 0) {
+      var version = size & VERSION_MASK;
+      var name = this.readString();
+      var seqId = this.tBuffer.readI32();
+      var tMsg = new TMessage(name, size & 0x000000ff, seqId);
+      return tMsg.read(this);
+    } else {
+      var tMsg = new TMessage(this.readString(), this.readByte(), this.readI32());
+      return tMsg.read(this);
+    }
   }
 
   this.readStruct = function() {

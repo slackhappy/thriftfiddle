@@ -20,6 +20,10 @@
         <label><input type="radio" name="encoding" value="Base64" checked="checked">Base64</label>
         <label><input type="radio" name="encoding" value="Hex">Hex</label>
       </div>
+      <div class="radio">
+        <label><input type="radio" name="messageType" value="Struct" checked="checked">Struct</label>
+        <label><input type="radio" name="messageType" value="Message">Message+Struct</label>
+      </div>
       </p>
       <p>
       <div id="result"></div>
@@ -33,6 +37,7 @@
         try {
           var bin;
           var encoding = $("[name='encoding']:checked").val();
+          var messageType = $("[name='messageType']:checked").val();
           if (encoding == 'Base64') {
             bin = exports.toByteArray(str);
           } else {
@@ -40,8 +45,13 @@
           }
           var tBuffer = new TBuffer(bin);
           var tProt = new TBinaryProtocol(tBuffer);
-          var tStruct = new TStruct();
-          return [true, tStruct.read(tProt)];
+          if (messageType == 'Struct') {
+            var tStruct = new TStruct();
+            return [true, tStruct.read(tProt)];
+          } else {
+            var result = tProt.readMessage();
+            return [true, result];
+          }
         } catch(e) {
           return unsuccessful;
         }
