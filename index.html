@@ -19,6 +19,7 @@
       <div class="radio">
         <label><input type="radio" name="encoding" value="Base64" checked="checked">Base64</label>
         <label><input type="radio" name="encoding" value="Hex">Hex</label>
+        <label><input type="radio" name="encoding" value="Array">Base 10 Array e.g. [2, 0, 10, 1, 0] or Array(2, 0, 10, 1, 0)</label>
       </div>
       <div class="radio">
         <label><input type="radio" name="messageType" value="Struct" checked="checked">Struct</label>
@@ -40,8 +41,18 @@
           var messageType = $("[name='messageType']:checked").val();
           if (encoding == 'Base64') {
             bin = exports.toByteArray(str);
-          } else {
+          } else if (encoding == 'Hex') {
             bin = hex2bin(str);
+          } else {
+            strParts = str.split(',');
+            var a = new Array();
+            for (var i = 0; i < strParts.length; i++) {
+              var stripped = strParts[i].replace(/[^0-9-]/g, '');
+              if (stripped.length > 0) {
+                a.push(+stripped);
+              }
+            }
+            bin = new Uint8Array(a);
           }
           var tBuffer = new TBuffer(bin);
           var tProt = new TBinaryProtocol(tBuffer);
