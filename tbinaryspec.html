@@ -11,41 +11,53 @@
     .code { font-family: monospace; }
     </style>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TBinaryProtocol spec</title>
   </head>
   <body>
     <div class="container">
       <h1>TBinaryProtocol Spec (derived)</h1>
+      <p>
+        I didn&apos;t see a simple description of the TBinaryProtocol specification on the internet,
+        so here is one I derived from reading the <a
+         href="https://github.com/apache/thrift/blob/master/lib/java/src/org/apache/thrift/protocol/TBinaryProtocol.java">
+        java implementation of TBinaryProtocol</a> while implementing the decoder for <a href="index.html">ThriftFiddle</a>
+        Page design loosely inspired by <a href="http://bsonspec.org/spec.html">bsonspec</a>, and EBNF.
+      </p>
       <a href="index.html">ThriftFiddle</a>
       <table class="table">
         <tr><th>symbol</th><th></th><th>expression</th><th>comment</th></tr>
         <tr><td class="code">(request)</td><td>::=</td><td class="code">message struct</td><td></td></tr>
         <tr><td class="code">(reply)</td><td>::=</td><td class="code">message (struct)?</td><td></td></tr>
-        <tr><td class="code">message</td><td>::=</td><td class="code">string mtype seqid</td><td></td></tr>
-        <tr><td class="code">mtype</td><td>::=</td><td class="code">"\x01"</td><td>CALL</td></tr>
-        <tr><td class="code">     </td><td> | </td><td class="code">"\x02"</td><td>REPLY</td></tr>
-        <tr><td class="code">     </td><td> | </td><td class="code">"\x03"</td><td>EXCEPTION</td></tr>
-        <tr><td class="code">     </td><td> | </td><td class="code">"\x04"</td><td>ONEWAY</td></tr>
+        <tr><td class="code">message</td><td>::=</td><td class="code">msg_strict OR msg_plain</td><td>If the signed I32 read is negative, the message was strict.  Otherwise, the first 32-bit signed read was the size of the string in msg_plain.</td></tr>
+
+        <tr><td class="code">msg_strict</td><td>::=</td><td class="code">(VER1 | mtype) string seqid</td><td>The first 32-bit value is VER1 bitwise or'd with the message type.  </td></tr>
+        <tr><td class="code">msg_plain</td><td>::=</td><td class="code">string mtype seqid</td><td></td></tr>
+        <tr><td class="code">mtype</td><td>::=</td><td class="code">0x01</td><td>CALL</td></tr>
+        <tr><td class="code">     </td><td> | </td><td class="code">0x02</td><td>REPLY</td></tr>
+        <tr><td class="code">     </td><td> | </td><td class="code">0x03</td><td>EXCEPTION</td></tr>
+        <tr><td class="code">     </td><td> | </td><td class="code">0x04</td><td>ONEWAY</td></tr>
         <tr><td class="code">seqid</td><td>::=</td><td class="code">value(I32)</td><td></td></tr>
-        <tr><td class="code">struct</td><td>::=</td><td class="code">(field)* "\x00" </td><td>A struct is just an undecorated list of fields, followed by a null byte</td></tr>
+        <tr><td class="code">VER1</td><td>::=</td><td class="code">0x80010000</td><td>32-bit identifier for protocol version 1</td></tr>
+        <tr><td class="code">struct</td><td>::=</td><td class="code">(field)* 0x00 </td><td>A struct is just an undecorated list of fields, followed by a null byte</td></tr>
         <tr><td class="code">field</td><td>::=</td><td class="code">type id value(type) </td><td>A type, id, and value</td></tr>
-        <tr><td class="code">type</td><td>::=</td><td class="code">"\x00"</td><td>STOP (designates fields in struct have ended)</td></tr>
-        <tr><td class="code">    </td><td> | </td><td class="code">"\x01"</td><td>VOID</td></tr>
-        <tr><td class="code">    </td><td> | </td><td class="code">"\x02"</td><td>BOOL</td></tr>
-        <tr><td class="code">    </td><td> | </td><td class="code">"\x03"</td><td>BYTE</td></tr>
-        <tr><td class="code">    </td><td> | </td><td class="code">"\x04"</td><td>DOUBLE</td></tr>
-        <tr><td class="code">    </td><td> | </td><td class="code">"\x06"</td><td>I16</td></tr>
-        <tr><td class="code">    </td><td> | </td><td class="code">"\x08"</td><td>I32</td></tr>
-        <tr><td class="code">    </td><td> | </td><td class="code">"\x0A"</td><td>I64</td></tr>
-        <tr><td class="code">    </td><td> | </td><td class="code">"\x0B"</td><td>STRING</td></tr>
-        <tr><td class="code">    </td><td> | </td><td class="code">"\x0C"</td><td>STRUCT</td></tr>
-        <tr><td class="code">    </td><td> | </td><td class="code">"\x0D"</td><td>MAP</td></tr>
-        <tr><td class="code">    </td><td> | </td><td class="code">"\x0E"</td><td>SET</td></tr>
-        <tr><td class="code">    </td><td> | </td><td class="code">"\x0F"</td><td>LIST</td></tr>
-        <tr><td class="code">    </td><td> | </td><td class="code">"\x10"</td><td>ENUM</td></tr>
+        <tr><td class="code">type</td><td>::=</td><td class="code">0x00</td><td>STOP (designates fields in struct have ended)</td></tr>
+        <tr><td class="code">    </td><td> | </td><td class="code">0x01</td><td>VOID</td></tr>
+        <tr><td class="code">    </td><td> | </td><td class="code">0x02</td><td>BOOL</td></tr>
+        <tr><td class="code">    </td><td> | </td><td class="code">0x03</td><td>BYTE</td></tr>
+        <tr><td class="code">    </td><td> | </td><td class="code">0x04</td><td>DOUBLE</td></tr>
+        <tr><td class="code">    </td><td> | </td><td class="code">0x06</td><td>I16</td></tr>
+        <tr><td class="code">    </td><td> | </td><td class="code">0x08</td><td>I32</td></tr>
+        <tr><td class="code">    </td><td> | </td><td class="code">0x0A</td><td>I64</td></tr>
+        <tr><td class="code">    </td><td> | </td><td class="code">0x0B</td><td>STRING</td></tr>
+        <tr><td class="code">    </td><td> | </td><td class="code">0x0C</td><td>STRUCT</td></tr>
+        <tr><td class="code">    </td><td> | </td><td class="code">0x0D</td><td>MAP</td></tr>
+        <tr><td class="code">    </td><td> | </td><td class="code">0x0E</td><td>SET</td></tr>
+        <tr><td class="code">    </td><td> | </td><td class="code">0x0F</td><td>LIST</td></tr>
+        <tr><td class="code">    </td><td> | </td><td class="code">0x10</td><td>ENUM</td></tr>
         <tr><td class="code">id</td><td>::=</td><td class="code">value(I16)</td><td></td></tr>
         <tr><td class="code">size</td><td>::=</td><td class="code">value(I32)</td><td></td></tr>
-        <tr><td class="code">value(BOOL)</td><td>::=</td><td class="code">"\x00" | "\x01"</td><td></td></tr>
-        <tr><td class="code">value(BYTE)</td><td>::=</td><td class="code">"\x00" - "\xFF"</td><td></td></tr>
+        <tr><td class="code">value(BOOL)</td><td>::=</td><td class="code">0x00 OR 0x01</td><td></td></tr>
+        <tr><td class="code">value(BYTE)</td><td>::=</td><td class="code">0x00 - 0xFF</td><td></td></tr>
         <tr><td class="code">value(DOUBLE)</td><td>::=</td><td class="code"></td><td>IEEE 754 double-precision</td></tr>
         <tr><td class="code">value(I16)</td><td>::=</td><td class="code">value(BYTE) value(BYTE)</td><td>(Big endian)</td></tr>
         <tr><td class="code">value(I32)</td><td>::=</td><td class="code">value(I16) value(I16)</td><td>(Big endian)</td></tr>

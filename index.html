@@ -9,24 +9,33 @@
     <script src="big.min.js"></script>
     <script src="thriftfiddle.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ThriftFiddle</title>
   </head>
   <body>
     <div class="container">
       <h1>ThriftFiddle</h1>
       <a href="tbinaryspec.html">TBinaryProtocol Spec (derived)</a>
       <p>
-      <textarea id="message" class="span12"></textarea>
+        A TBinaryProtocol decoder/deserializer.
+        Enter the string representing some thrift serialized using TBinaryPrototcol here (e.g. from tcpdump), choose the encoding type,
+        and see the reconstructed message.  TBinaryProtocol does not have field name information, only types and values.
+      </p>
+      <textarea id="message" class="span12">[2, 0, 10, 1, 0]
+      </textarea>
       <div class="radio">
-        <label><input type="radio" name="encoding" value="Base64" checked="checked">Base64</label>
+        <label><input type="radio" name="encoding" value="Base64">Base64</label>
         <label><input type="radio" name="encoding" value="Hex">Hex</label>
-        <label><input type="radio" name="encoding" value="Array">Base 10 Array e.g. [2, 0, 10, 1, 0] or Array(2, 0, 10, 1, 0)</label>
+        <label><input type="radio" name="encoding" value="Array" checked="checked">Base 10 Array e.g. [2, 0, 10, 1, 0] or Array(2, 0, 10, 1, 0)</label>
       </div>
+      <hr>
       <div class="radio">
         <label><input type="radio" name="messageType" value="Struct" checked="checked">Struct</label>
         <label><input type="radio" name="messageType" value="Message">Message+Struct</label>
       </div>
       </p>
+      <hr>
       <p>
+      Result:
       <div id="result"></div>
       </p>
 
@@ -120,6 +129,7 @@
         $('input:radio').change(function(e) {
           process();
         })
+        process();
       })
     </script>
   <body>
